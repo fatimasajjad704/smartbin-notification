@@ -11,7 +11,7 @@ firebase.initializeApp({
   projectId        : "smartbin-386a3",
   storageBucket    : "smartbin-386a3.appspot.com",
   messagingSenderId: "376722285195",
-  appId            : "YOUR_WEB_APP_ID"  // ⚠️ fix this
+  appId            : "1:376722285195:android:8b24f659d83bda6f1eea8e"  // ⚠️ fix this
 });
 
 const messaging = firebase.messaging();

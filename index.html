@@ -54,42 +54,47 @@
   </button>
 </div>
 
+
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 
 <script>
-// ── Your Firebase Config ──
 const firebaseConfig = {
   apiKey           : "AIzaSyDGevihHfNrGCZz7SCnzj5ZRCgiBDRg0GQ",
   authDomain       : "smartbin-386a3.firebaseapp.com",
   projectId        : "smartbin-386a3",
   storageBucket    : "smartbin-386a3.appspot.com",
   messagingSenderId: "376722285195",
-  appId            : "1:376722285195:web:852a05780ed758381eea8e"  // ⚠️ fix this
+  appId            : "1:376722285195:web:852a05780ed758381eea8e"
 };
 
-// ── Your VAPID Key ──
-const VAPID_KEY = "BGv1hxGXLe73rGW_np_MyABIgLJ0Fzn82s5W8B3W35agQINORSvF5r_wxhmPBzs0Ig1GC1-sEZiESCyFasaINhQ";
-
-// ── Your Apps Script URL ──
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRaxltwHXNNJiIt4sf3XR_CfjSbJmkRvVGGXK2vky51sQWm9a9nyZCi6oAPUIYwZcdIQ/exec"; // ⚠️ fix this
+const VAPID_KEY  = "BGv1hxGXLe73rGW_np_MyABIgLJ0Fzn82s5W8B3W35agQINORSvF5r_wxhmPBzs0Ig1GC1-sEZiESCyFasaINhQ";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5e3tM25QlWCxaftJyXZeFJSGQgifF4fdZFRk_5D8gdmxcFAWAvRriU8zevOnT3qsB/exec";
 
 firebase.initializeApp(firebaseConfig);
-const messaging = firebase.messaging();
+let messaging;
+let fcmToken = "";
 
-// ── Tell Firebase where service worker is ──
+// ── Register service worker manually with correct path ──
 navigator.serviceWorker
   .register("/smartbin-notification/firebase-messaging-sw.js")
   .then(registration => {
+    console.log("SW registered:", registration);
+    messaging = firebase.messaging();
     messaging.useServiceWorker(registration);
+    setStatus("waiting", "⏳ Tap Enable Notifications button");
   })
   .catch(err => {
-    console.error("SW registration failed:", err);
+    console.error("SW failed:", err);
+    setStatus("error", "❌ Service Worker failed: " + err.message);
   });
-let fcmToken = "";
 
 function getToken() {
+  if (!messaging) {
+    setStatus("error", "❌ Messaging not ready yet. Wait 2 seconds and try again.");
+    return;
+  }
   setStatus("waiting", "⏳ Requesting permission...");
   Notification.requestPermission().then(permission => {
     if (permission === "granted") {
@@ -101,14 +106,14 @@ function getToken() {
             document.getElementById("tokenBox").textContent = token;
             setStatus("success", "✅ Got token! Now tap Subscribe.");
           } else {
-            setStatus("error", "❌ No token returned. Check Firebase.");
+            setStatus("error", "❌ No token returned.");
           }
         })
         .catch(err => {
           setStatus("error", "❌ Error: " + err.message);
         });
     } else {
-      setStatus("error", "❌ Permission denied. Allow notifications in browser settings.");
+      setStatus("error", "❌ Permission denied.");
     }
   });
 }
@@ -125,7 +130,6 @@ function subscribeNow() {
   const el = document.getElementById("subStatus");
   el.className = "waiting";
   el.textContent = "⏳ Subscribing...";
-
   fetch(SCRIPT_URL + "?action=subscribe&token=" + encodeURIComponent(fcmToken))
     .then(r => r.text())
     .then(t => {

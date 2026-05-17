@@ -75,14 +75,15 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5e3tM25QlWCxaftJyX
 firebase.initializeApp(firebaseConfig);
 let messaging;
 let fcmToken = "";
-
+let swRegistration = null;
 // ── Register service worker manually with correct path ──
 navigator.serviceWorker
   .register("/smartbin-notification/firebase-messaging-sw.js")
   .then(registration => {
     console.log("SW registered:", registration);
+    // ── New way — pass registration directly to getToken ──
     messaging = firebase.messaging();
-    messaging.useServiceWorker(registration);
+    swRegistration = registration;
     setStatus("waiting", "⏳ Tap Enable Notifications button");
   })
   .catch(err => {
@@ -99,8 +100,10 @@ function getToken() {
   Notification.requestPermission().then(permission => {
     if (permission === "granted") {
       setStatus("waiting", "⏳ Getting FCM token...");
-      messaging.getToken({ vapidKey: VAPID_KEY })
-        .then(token => {
+messaging.getToken({ 
+  vapidKey: VAPID_KEY,
+  serviceWorkerRegistration: swRegistration
+})        .then(token => {
           if (token) {
             fcmToken = token;
             document.getElementById("tokenBox").textContent = token;

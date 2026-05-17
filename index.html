@@ -77,6 +77,16 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRaxltwHXNNJiIt4sf3
 
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
+
+// ── Tell Firebase where service worker is ──
+navigator.serviceWorker
+  .register("/smartbin-notification/firebase-messaging-sw.js")
+  .then(registration => {
+    messaging.useServiceWorker(registration);
+  })
+  .catch(err => {
+    console.error("SW registration failed:", err);
+  });
 let fcmToken = "";
 
 function getToken() {

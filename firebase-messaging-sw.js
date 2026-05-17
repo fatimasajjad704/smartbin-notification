@@ -7,7 +7,7 @@ firebase.initializeApp({
   projectId        : "smartbin-386a3",
   storageBucket    : "smartbin-386a3.appspot.com",
   messagingSenderId: "376722285195",
-  appId            : "1:376722285195:android:8b24f659d83bda6f1eea8e"
+  appId            : "1:376722285195:web:852a05780ed758381eea8e"
 });
 
 const messaging = firebase.messaging();
